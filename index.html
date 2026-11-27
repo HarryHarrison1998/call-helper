@@ -29,6 +29,7 @@ h1{margin:0;font-size:24px;line-height:1.2;color:#fff;overflow-wrap:anywhere}
 <a class="b" id="sc" hidden>Save contact and call</a>
 <a class="b" id="vcf" hidden>Save to Contacts</a>
 <button class="b q" id="x" type="button">Close</button>
+<button class="b q" id="tg" type="button" hidden></button>
 <p class="h" id="hint">This page only works when opened from a Call button.</p>
 </main>
 <script>
@@ -46,18 +47,26 @@ h1{margin:0;font-size:24px;line-height:1.2;color:#fff;overflow-wrap:anywhere}
   document.getElementById("who").textContent=org||name||"Call";
   document.getElementById("num").textContent=n;
   var tel="tel:"+n;
-  var payload=[n,name,org,email,addr,note,q.k==="1"?"KNOWN":"NEW"].join("\n");
-  var scUrl="shortcuts://run-shortcut?name="+encodeURIComponent(scName)+"&input=text&text="+encodeURIComponent(payload);
+  /* The shortcut gets two lines: the contact's display name, then the number. */
+  var disp=name?name+(org?" ("+org+")":""):(org||n);
+  var scUrl="shortcuts://run-shortcut?name="+encodeURIComponent(scName)+"&input=text&text="+encodeURIComponent(disp+"\n"+n);
+  var get=function(k){try{return localStorage.getItem(k)}catch(e){return null}},put=function(k,v){try{localStorage.setItem(k,v)}catch(e){}};
+  var scOn=get("sc_on")==="1",saved={};try{saved=JSON.parse(get("saved")||"{}")||{}}catch(e){}
   var call=document.getElementById("call");call.href=tel;call.hidden=false;
-  var sc=document.getElementById("sc");sc.href=scUrl;sc.hidden=false;
+  var sc=document.getElementById("sc");sc.href=scUrl;sc.hidden=!scOn;
+  var mark=function(){saved[n]=1;put("saved",JSON.stringify(saved))};sc.addEventListener("click",mark);
+  var tg=document.getElementById("tg");tg.hidden=false;tg.textContent="Automatic contact saving: "+(scOn?"On":"Off");
+  tg.onclick=function(){put("sc_on",scOn?"0":"1");scOn=!scOn;tg.textContent="Automatic contact saving: "+(scOn?"On":"Off")+" (applies from the next call)";sc.hidden=!scOn};
   var esc=function(s){return String(s).replace(/\\/g,"\\\\").replace(/([,;])/g,"\\$1")};
   var parts=name.split(/\s+/).filter(Boolean);
   var v=["BEGIN:VCARD","VERSION:3.0","FN:"+esc(name?name+(org?" ("+org+")":""):org||n),"N:"+(name?esc(parts.slice(1).join(" "))+";"+esc(parts[0]):esc(org||n)+";")+";;;"];
   if(org)v.push("ORG:"+esc(org));v.push("TEL;TYPE=WORK,VOICE:"+n);if(email.indexOf("@")>0)v.push("EMAIL;TYPE=WORK:"+esc(email));if(addr)v.push("ADR;TYPE=WORK:;;"+esc(addr)+";;;;");if(note)v.push("NOTE:"+esc(note));v.push("END:VCARD");
   var vc=document.getElementById("vcf");vc.href="data:text/vcard;charset=utf-8,"+encodeURIComponent(v.join("\r\n")+"\r\n");vc.hidden=false;
-  var useSc=q.m==="sc";
-  document.getElementById("hint").textContent=useSc?"Your shortcut should open by itself. If it does not, tap Save contact and call.":"Your iPhone should ask to call straight away. If it does not, tap Call now.";
-  setTimeout(function(){try{location.href=useSc?scUrl:tel}catch(e){}},150);
+  var useSc=scOn&&!saved[n];vc.hidden=scOn;
+  document.getElementById("hint").textContent=useSc?"First call to this number: your CRM Dial shortcut saves the contact and dials. If it does not open, tap Save contact and call.":"Your iPhone should ask to call straight away. If it does not, tap Call now.";
+  setTimeout(function(){try{if(useSc)mark();location.href=useSc?scUrl:tel}catch(e){}},150);
+  /* when Harry comes back after the call, close this tab so the CRM is in front again */
+  var away=false;document.addEventListener("visibilitychange",function(){if(document.visibilityState==="hidden")away=true;else if(away){try{window.close()}catch(e){}}});
 })();
 </script>
 </body>
