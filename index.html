@@ -47,9 +47,9 @@ h1{margin:0;font-size:24px;line-height:1.2;color:#fff;overflow-wrap:anywhere}
   document.getElementById("who").textContent=org||name||"Call";
   document.getElementById("num").textContent=n;
   var tel="tel:"+n;
-  /* The shortcut gets two lines: the contact's display name, then the number. */
+  /* The shortcut gets the contact's display name, then the number, then the email if there is one. */
   var disp=name?name+(org?" ("+org+")":""):(org||n);
-  var scUrl="shortcuts://run-shortcut?name="+encodeURIComponent(scName)+"&input=text&text="+encodeURIComponent(disp+"\n"+n);
+  var scUrl="shortcuts://run-shortcut?name="+encodeURIComponent(scName)+"&input=text&text="+encodeURIComponent(disp+"\n"+n+(email.indexOf("@")>0?"\n"+email:""));
   var get=function(k){try{return localStorage.getItem(k)}catch(e){return null}},put=function(k,v){try{localStorage.setItem(k,v)}catch(e){}};
   var scOn=get("sc_on")==="1",saved={};try{saved=JSON.parse(get("saved")||"{}")||{}}catch(e){}
   var call=document.getElementById("call");call.href=tel;call.hidden=false;
