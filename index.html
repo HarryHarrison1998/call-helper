@@ -61,7 +61,7 @@ h1{margin:0;font-size:24px;line-height:1.2;color:#fff;overflow-wrap:anywhere}
   var parts=name.split(/\s+/).filter(Boolean);
   var v=["BEGIN:VCARD","VERSION:3.0","FN:"+esc(name?name+(org?" ("+org+")":""):org||n),"N:"+(name?esc(parts.slice(1).join(" "))+";"+esc(parts[0]):esc(org||n)+";")+";;;"];
   if(org)v.push("ORG:"+esc(org));v.push("TEL;TYPE=WORK,VOICE:"+n);if(email.indexOf("@")>0)v.push("EMAIL;TYPE=WORK:"+esc(email));if(addr)v.push("ADR;TYPE=WORK:;;"+esc(addr)+";;;;");if(note)v.push("NOTE:"+esc(note));v.push("END:VCARD");
-  var vc=document.getElementById("vcf");vc.href="data:text/vcard;charset=utf-8,"+encodeURIComponent(v.join("\r\n")+"\r\n");vc.hidden=false;
+  var vc=document.getElementById("vcf");try{vc.href=URL.createObjectURL(new Blob([v.join("\r\n")+"\r\n"],{type:"text/vcard"}))}catch(e){vc.href="data:text/vcard;charset=utf-8,"+encodeURIComponent(v.join("\r\n")+"\r\n")}vc.hidden=false;
   var useSc=scOn&&!saved[n];vc.hidden=scOn;
   document.getElementById("hint").textContent=useSc?"First call to this number: your CRM Dial shortcut saves the contact and dials. If it does not open, tap Save contact and call.":"Your iPhone should ask to call straight away. If it does not, tap Call now.";
   setTimeout(function(){try{if(useSc)mark();location.href=useSc?scUrl:tel}catch(e){}},150);
